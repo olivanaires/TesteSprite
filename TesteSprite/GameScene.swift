@@ -29,12 +29,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let enemy_category: UInt32 = 0x1 << 1
     let bala_category: UInt32 = 0x1 << 0
     
+    var escoreLabel: SKLabelNode!
+    var escoreValue: Int = 0
+    
     override func didMoveToView(view: SKView) {
         view_width = (self.view?.frame.width)!
         view_height = (self.view?.frame.height)!
         
         main_view = SKNode()
         self.addChild(main_view)
+        
+        escoreLabel = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
+        escoreLabel.text = "Kills: \(escoreValue)"
+        escoreLabel.fontSize = 30
+        escoreLabel.fontColor = UIColor.blackColor()
+        escoreLabel.position = CGPoint(x: escoreLabel.frame.width * 0.7, y: (self.view?.bounds.maxY)! - escoreLabel.frame.height * 1.5)
+        main_view.addChild(escoreLabel)
 
         physicsWorld.gravity = CGVector(dx: 0.0, dy: -2.0)
         
@@ -44,11 +54,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.physicsBody?.friction = 0
         self.physicsWorld.contactDelegate = self
         
-        long_press_recognozer = UILongPressGestureRecognizer(target: self, action: "playerPressed:")
+        long_press_recognozer = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.playerPressed(_:)))
         long_press_recognozer.minimumPressDuration = 0.001
         self.view?.addGestureRecognizer(long_press_recognozer)
         
-        enemy_animation_time = NSTimer.scheduledTimerWithTimeInterval(NSTimeInterval(2), target: self, selector: "addEnemy:", userInfo: nil, repeats: true)
+        enemy_animation_time = NSTimer.scheduledTimerWithTimeInterval(NSTimeInterval(2), target: self, selector: #selector(GameScene.addEnemy(_:)), userInfo: nil, repeats: true)
         
         criaBackground()
         criaHero()
@@ -66,7 +76,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if local.x < view_width / 2 {
                 runAndFire()
                 fire()
-                fire_animation_timer = NSTimer.scheduledTimerWithTimeInterval(NSTimeInterval(0.3), target: self, selector: "fireInterval:", userInfo: nil, repeats: true)
+                fire_animation_timer = NSTimer.scheduledTimerWithTimeInterval(NSTimeInterval(0.3), target: self, selector: #selector(GameScene.fireInterval(_:)), userInfo: nil, repeats: true)
             }
         } else if recognizer.state == UIGestureRecognizerState.Changed {
             let local = recognizer.locationInView(self.view)
@@ -93,7 +103,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
    
     override func update(currentTime: CFTimeInterval) {
-
+        
     }
     
     func addEnemy(timer:NSTimer) {
@@ -129,7 +139,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func fire() {
         let bala = SKSpriteNode(imageNamed: "bala")
-        bala.position = CGPointMake(hero.position.x + 30, hero.position.y - 8)
+        bala.position = CGPointMake(hero.position.x + 30, hero.position.y - 2)
         bala.physicsBody = SKPhysicsBody(circleOfRadius: bala.size.height/3)
         bala.physicsBody?.dynamic = false
         bala.physicsBody?.categoryBitMask = bala_category
@@ -149,8 +159,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let moveGroundSprite = SKAction.moveByX(-view_width, y: 0, duration: NSTimeInterval(0.02 * view_width))
         let resetGroundSprite = SKAction.moveByX(view_width, y: 0, duration: 0.0)
         let moveGroundSpritesForever = SKAction.repeatActionForever(SKAction.sequence([moveGroundSprite, resetGroundSprite]))
-        
-        for var i:CGFloat = 0; i < 2.0 + view_width / (view_width * 2.0); ++i {
+        let limit = 2.0 + view_width / (view_width * 2.0)
+        for var i:CGFloat = 0; i < limit; ++i {
             let bg = SKSpriteNode(imageNamed: "bg3")
             bg.size = (self.view?.bounds.size)!
             bg.anchorPoint = CGPointZero
@@ -182,6 +192,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func balaColidiuComInimigo(bala: SKSpriteNode, inimigo: SKSpriteNode) {
         bala.removeFromParent()
         inimigo.removeFromParent()
+        escoreValue += 1
+        escoreLabel.text = " Kills: \(escoreValue)"
+
     }
     
     func criaHero() {
